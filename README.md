@@ -1,6 +1,6 @@
-# node-mvc
+# node-api
 
-This is the sample node js mvc structure.
+This is the sample node js api system.
 
 ## Packages list
 
