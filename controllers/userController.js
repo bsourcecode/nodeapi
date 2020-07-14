@@ -1,34 +1,58 @@
 var users = require('../services/userService');
 
 exports.getUsers = async function(req, res) {
-    var docs = await users.findAll();
-    res.status(200).json({statusCode:200, data: docs});
+    users.findAll().then(data => res.json(data)).catch(err => res.send(err));
 };
 
 exports.getUser = async function(req, res) {
-    var docs = await users.findById(req.params.id);
-    res.status(200).json({statusCode:200, data: docs});
+    users.findById(req.params.id)
+    .then(data => res.json(data))
+    .catch(err => res.json({errors:err}));
 };
 
-exports.addUser = async function(req, res) {
+exports.addUser = function(req, res) {
     var data = {
         username: req.body.username,
-        password: req.body.password,
+        password: req.body.password
     }
-    var docs = await users.insert(data);
-    res.status(200).json({statusCode:200, data: docs});
+    users.insert(data)
+    .then(data => res.json(data))
+    .catch(err => res.json({errors:err}));
 };
 
 exports.updateUser = async function(req, res) {
-    var data = {        
-        username: req.body.username,
-        password: req.body.password,
+    var data = {
+        username: req.body.username
     }
-    var docs = await users.modify(req.params.id, data);
-    res.status(200).json({statusCode:200, data: docs});
+    users.modify(req.params.id, data)
+    .then(data => res.json(data))
+    .catch(err => res.json({errors:err}));
 };
 
 exports.deleteUser = async function(req, res) {
-    var docs = await users.removeById(req.params.id);
-    res.status(200).json({statusCode:200, data: docs});
+    users.removeById(req.params.id)
+    .then(data => res.json(data))
+    .catch(err => res.json({errors:err}));
+};
+
+exports.updatePassword = function(req, res) {
+    users.findById(req.params.id)
+    .then(user_doc => {
+        if(!user_doc){
+            res.json({errors: [{message:'Please enter valid details'}]});
+        }
+        users.verifyPassword(req.body.current_password, user_doc.data.password)
+        .then(function(password_status){
+            if(password_status){
+                users.modifyPassword(req.params.id, req.body.password)
+                .then(data => res.json(data))
+                .catch(err => res.json({errors:err}));
+            }else{
+                res.json({errors: [{message:'Please enter exact current password'}]});
+            }
+        }).catch(err => {
+            res.json({errors: [{message:'Please enter exact current password'}]});
+        });        
+    })
+    .catch(err => res.json({errors:err}));    
 };

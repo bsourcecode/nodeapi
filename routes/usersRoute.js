@@ -16,6 +16,6 @@ router.put('/:id', CUserCtrl.updateUser);
 
 router.delete('/:id',  CUserCtrl.deleteUser);
 
-/*router.patch('/:id', CUserCtrl.actionUpdate);*/
+router.post('/:id', CUserCtrl.updatePassword);
 
 module.exports = router;
