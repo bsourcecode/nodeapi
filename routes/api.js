@@ -4,7 +4,6 @@ var router = express.Router();
 //Modules/Service routers
 var authService = require('../services/authService');
 var authRouter = require('./authRoute');
-var patientRouter = require('./patientsRoute');
 var userRouter = require('./usersRoute');
 
 
@@ -16,8 +15,5 @@ router.use(authService.verifyToken)
 
 //User module (CRUD)
 router.use('/users', userRouter);
-
-//Patient module (CRUD)
-router.use('/patient', patientRouter);
 
 module.exports = router;
