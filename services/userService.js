@@ -1,57 +1,48 @@
 var db = require('../helper/db');
 var ObjectId = require('mongodb').ObjectID;
 var bcrypt = require('bcrypt');
-var Ajv = require('ajv');
-var userSchema = require('../schemas/user');
 
-var ajv = new Ajv({allErrors:true});
-var UserInsertSchema = ajv.compile(userSchema.getSchema());
-var UserUpdateSchema = ajv.compile(userSchema.getUpdateSchema());
-var UserIdSchema = ajv.compile(userSchema.getIdSchema());
-var UserUsernameSchema = ajv.compile(userSchema.getUsernameSchema());
-var UserPasswordSchema = ajv.compile(userSchema.getPasswordSchema());
+var userValidation = require('../validation/userValidation');
 
 const SALT_ROUNDS = 10
 
-async function findAll(){
-    return await db.get().collection('users').find().toArray();
+//Find by object 
+async function findAll(data = {}){
+    var response = userValidation.validate(data);    
+    if(response === true){
+        if ('_id' in data)
+            data._id = ObjectId(data._id);
+        var docs = await db.get().collection('users').find(data).toArray();
+        return docs ? {data:docs} : [];
+    }
+    throw response;
 }
 
-//findByID
-async function findById(id){
-    var response = findByIdValidation({_id:id});
+async function findOne(data = {}){
+    var response = userValidation.validate(data);
     if(response === true){
-        var docs = await db.get().collection('users').findOne({_id: ObjectId(id)});
+        if ('_id' in data)
+            data._id = ObjectId(data._id);
+
+        var docs = await db.get().collection('users').findOne(data);
         return docs ? {data:docs} : {};
     }
     throw response;
 }
 
-function findByIdValidation(data){
-    var valid = UserIdSchema(data);
-    if (!valid)
-        return UserIdSchema.errors;
-    return true;
+//findByID
+async function findById(id){
+    return await findOne({_id:id});
 }
 
- //findByUsername
+//findByUsername
 async function findByUsername(username){
-    var response = findByUsernameValidation({username:username});
-    if(response === true)
-        return await db.get().collection('users').findOne({username:username});
-    throw response;
+    return await findOne({username:username});
 }
-
-function findByUsernameValidation(data){
-    var valid = UserUsernameSchema(data);
-    if (!valid)
-        return UserUsernameSchema.errors;
-    return true;
- }
 
  //Insert
  async function insert(data){
-    var response = insertValidation(data);
+    var response = await userValidation.insertValidation(data);
     if(response === true){
         data.password = await encryptPassword(data.password);
         var docs = await db.get().collection('users').insertOne(data);
@@ -60,18 +51,11 @@ function findByUsernameValidation(data){
     throw response;
 }
 
-function insertValidation(data){
-    var valid = UserInsertSchema(data);
-    if (!valid)
-        return UserInsertSchema.errors;
-    return true;
-}
-
 //Modify
 async function modify(id, data){
     var vdata = data;
     vdata._id = id;
-    var response = modifyValidation(vdata);
+    var response = await userValidation.modifyValidation(vdata);
     if(response === true){
         var docs = await db.get().collection('users').updateOne({_id: ObjectId(id)}, {$set:data});
         return docs ? {data:docs} : {};
@@ -79,41 +63,39 @@ async function modify(id, data){
     throw response;
 }
 
-function modifyValidation(data){
-    var valid = UserUpdateSchema(data);
-    if (!valid)
-        return UserUpdateSchema.errors;
-    return true;
-}
 
 //Password update
-async function modifyPassword(id, password){
+async function modifyPassword(id, password, current_password){
     var vdata = {
         _id:id,
-        password:password
+        password:password,
+        current_password: current_password
     };
-    var response = modifyPasswordValidation(vdata);
+    var response = userValidation.validate(vdata);
     if(response === true){
-        var hash_password = await encryptPassword(password);
-        var data = {
-            password: hash_password
+        var user_doc = await findOne({_id:id});
+        if(user_doc && user_doc.data){
+            var password_status = await verifyPassword(current_password, user_doc.data.password);
+            if(password_status){
+                var hash_password = await encryptPassword(password);
+                var data = {
+                    password: hash_password
+                }
+                var docs = await db.get().collection('users').updateOne({_id: ObjectId(id)}, {$set:data});
+                return docs ? {data:docs} : {};
+            }else{
+                throw ([{message: 'Please enter exact current password'}]);
+            }
+        }else{
+            throw ([{message:'User records is not found!'}]);
         }
-        var docs = await db.get().collection('users').updateOne({_id: ObjectId(id)}, {$set:data});
-        return docs ? {data:docs} : {};
     }
     throw response;
-}
-
-function modifyPasswordValidation(data){
-    var valid = UserPasswordSchema(data);
-    if (!valid)
-        return UserPasswordSchema.errors;
-    return true;
 }
 
 //Remove 
 async function removeById(id){
-    var response = findByIdValidation({_id:id});
+    var response = userValidation.validate({_id:id});
     if(response === true){
         var docs = await db.get().collection('users').deleteOne({_id: ObjectId(id)});
         return docs ? {data:docs} : {};
@@ -136,7 +118,6 @@ async function verifyPassword(password, dbpassword){
     });
 }
 
-
 function encryptPassword(password){
     return new Promise((resolve, reject) => {
         bcrypt.hash(password, SALT_ROUNDS, function(err, hash) {
@@ -151,14 +132,8 @@ function encryptPassword(password){
 exports.findAll = findAll;
 exports.verifyPassword = verifyPassword;
 exports.findById = findById;
-//exports.findByIdValidation = findByIdValidation;
 exports.findByUsername = findByUsername;
-//exports.findByUsernameValidation = findByUsernameValidation;
 exports.insert = insert;
-//exports.insertValidation = insertValidation;
 exports.modify = modify;
-exports.modifyValidation = modifyValidation;
-exports.removeById = removeById;
-
 exports.modifyPassword = modifyPassword;
-//exports.modifyPasswordValidation = modifyPasswordValidation;
+exports.removeById = removeById;

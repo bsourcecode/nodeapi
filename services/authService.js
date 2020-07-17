@@ -8,8 +8,8 @@ function authenticate(req, res, next){
     }
     users.findByUsername(req.body.username)
     .then(user_doc => {
-        if(user_doc){
-            users.verifyPassword(req.body.password, user_doc.password)
+        if(user_doc && user_doc.data){
+            users.verifyPassword(req.body.password, user_doc.data.password)
             .then(function(password_status){
                 if(password_status){
                     var token = jwt.sign({
