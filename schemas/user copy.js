@@ -1,4 +1,4 @@
-function getSchema(){
+exports.getSchema = function(){
     return {
         "properties": {
             "_id": {
@@ -34,23 +34,10 @@ function getSchema(){
         "type": "object",
         "definitions": {},
         "$schema": "http://json-schema.org/draft-07/schema#"
-    };
+    }
 }
 
 exports.getInsertSchema = function(){
-    /*var schema = getSchema();
-    schema.required = [
-        "username",
-        "password",
-        "email",
-        "dob",
-        "gender",
-        "createdon",
-        "phone"
-    ];
-    schema['$id'] = "user-insert-schema#";
-    schema["additionalProperties"] = false;
-    return schema;*/
     return {
         "required": [
             "username",
@@ -59,9 +46,7 @@ exports.getInsertSchema = function(){
             "dob",
             "gender",
             "createdon",
-            "phone",
-            "favourite",
-            "faq"
+            "phone"
         ],
         "properties": {
             "_id": {
@@ -76,9 +61,7 @@ exports.getInsertSchema = function(){
                 "type": "string",
                 "minLength": 5,
                 "maxLength": 15,
-                "pattern": "^[a-z0-9_-]*$",
-                "text":"UserName"
-            },
+                "pattern": "^[a-z0-9_-]*$"            },
             "password": {
                 "$id": "#/properties/password",
                 "type": "string",
@@ -115,49 +98,6 @@ exports.getInsertSchema = function(){
                 "else": {
                     "if": { "minimum": 10 },
                     "then": { "multipleOf": 10 }
-                }
-            },
-            "favourite": {
-                "$id": "#/properties/favourite",
-                "type": "array",
-                "items": [
-                    {
-                        "type": "string",        
-                        "pattern": "^[0-9a-fA-F]{24}$",
-                    }
-                ]
-            },
-            "faq": {
-                "$id": "#/properties/faq",
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "title": { "type": "string", "minLength": 5, 'text':'Title'},
-                        "description": { "type": "string", 'text':'Description'}
-                    }
-                },
-                "text": "Question"
-            },
-            "contact": {
-                "$id": "#/properties/contact",
-                "type": "object",
-                "required": ["email", "phone"],
-                "properties": {
-                    "phone": {
-                        "$id": "#/properties/phone",
-                        "type": "string",
-                        "pattern": "^[0-9]{10}$",
-                        'text': 'Contact No'
-                    },
-                    "email": {
-                        "$id": "#/properties/email",
-                        "type": "string",
-                        "format": "email",
-                        "minLength": 3,
-                        "maxLength": 45,
-                        'text': 'email ID'
-                    },
                 }
             },
             "createdon": {
@@ -206,5 +146,3 @@ exports.getUpdateSchema = function(){
         "$schema": "http://json-schema.org/draft-07/schema#"
     }
 }
-
-exports.getSchema = getSchema;

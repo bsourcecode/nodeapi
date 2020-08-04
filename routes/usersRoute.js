@@ -10,7 +10,11 @@ router.get('/', CUserCtrl.getUsers);
 
 router.get('/:id', CUserCtrl.getUser);
 
+//Bulk upload
+router.post('/bulkupload', CUserCtrl.uploadUser);
+
 router.post('/', CUserCtrl.addUser);
+
 
 router.put('/:id', CUserCtrl.updateUser);
 

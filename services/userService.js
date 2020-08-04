@@ -8,7 +8,7 @@ const SALT_ROUNDS = 10
 
 //Find by object 
 async function findAll(data = {}){
-    var response = userValidation.validate(data);    
+    var response = userValidation.validate(data);
     if(response === true){
         if ('_id' in data)
             data._id = ObjectId(data._id);
@@ -23,7 +23,6 @@ async function findOne(data = {}){
     if(response === true){
         if ('_id' in data)
             data._id = ObjectId(data._id);
-
         var docs = await db.get().collection('users').findOne(data);
         return docs ? {data:docs} : {};
     }
@@ -41,14 +40,50 @@ async function findByUsername(username){
 }
 
  //Insert
- async function insert(data){
-    var response = await userValidation.insertValidation(data);
+ async function insert(data, validate = true){
+
+    var response = validate ? (await userValidation.insertValidation(data)) : true;
     if(response === true){
         data.password = await encryptPassword(data.password);
         var docs = await db.get().collection('users').insertOne(data);
         return docs ? {data:docs} : {};
     }
     throw response;
+}
+
+async function bulkinsert(data){
+    var errors = [];
+    for(var index in data){
+        var response = await userValidation.insertValidation(data[index]);
+        if(response !== true){
+            var err = {dataindex: parseInt(index)+1, error:response};
+            errors.push(err);
+        }
+    }
+
+    if(errors.length){
+        throw errors;
+    }
+
+    var errors = [];
+    var count = 0;
+    for(var index in data){
+        var response = await userValidation.insertValidation(data[index]);
+        if(response === true){
+            data[index].password = await encryptPassword(data[index].password);
+            var docs = await db.get().collection('users').insertOne(data[index]);
+            count++;
+        }else{
+            var err = {dataindex: parseInt(index)+1, error:response};
+            errors.push(err);
+        }        
+    }
+
+    if(count === 0){
+        throw errors;
+        return;
+    }
+    return {insert: count, message:'Records are inserted successfully', errors: errors};
 }
 
 //Modify
@@ -63,7 +98,6 @@ async function modify(id, data){
     throw response;
 }
 
-
 //Password update
 async function modifyPassword(id, password, current_password){
     var vdata = {
@@ -71,6 +105,7 @@ async function modifyPassword(id, password, current_password){
         password:password,
         current_password: current_password
     };
+
     var response = userValidation.validate(vdata);
     if(response === true){
         var user_doc = await findOne({_id:id});
@@ -134,6 +169,7 @@ exports.verifyPassword = verifyPassword;
 exports.findById = findById;
 exports.findByUsername = findByUsername;
 exports.insert = insert;
+exports.bulkinsert = bulkinsert;
 exports.modify = modify;
 exports.modifyPassword = modifyPassword;
 exports.removeById = removeById;

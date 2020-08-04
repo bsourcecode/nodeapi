@@ -1,7 +1,6 @@
 var users = require('../services/userService');
 
 exports.getUsers = async function(req, res) {
-    console.log("here")
     users.findAll().then(data => res.json(data)).catch(err => res.send(err));
 };
 
@@ -12,11 +11,16 @@ exports.getUser = async function(req, res) {
 };
 
 exports.addUser = function(req, res) {
-    var data = {
-        username: req.body.username,
-        password: req.body.password
-    }
+    var data = req.body;
     users.insert(data)
+    .then(data => res.json(data))
+    .catch(err => res.json({errors:err}));
+};
+
+exports.uploadUser = function(req, res) {
+
+    var data = req.body.data;
+    users.bulkinsert(data)
     .then(data => res.json(data))
     .catch(err => res.json({errors:err}));
 };
