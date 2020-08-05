@@ -4,21 +4,7 @@ var Ajv = require('ajv');
 var AjvResponseHandler = require('ajv-response-handler');
 var userSchemas = require('../schemas/user');
 
-
-var format = require('./format_deprecated');
-
-var ajv = new Ajv({allErrors:true, removeAdditional: true});
-
-//Extend to custom/db validation
-
-
-ajv.addKeyword('idExists', {
-    type: 'string',
-    validate: function(schema, data){
-        console.log("here", schema, data);
-        return false;
-    }
-});
+var ajv = new Ajv({allErrors:true, removeAdditional: true, format: 'full'});
 
 var userSchema = ajv.compile(userSchemas.getSchema());
 var UserInsertSchema = ajv.compile(userSchemas.getInsertSchema());
@@ -39,9 +25,10 @@ function validate(data){
 async function insertValidation(data, unique = true){
     var post_data = Object.assign({}, data);;
     var valid = UserInsertSchema(data);
-    console.log(data, post_data);
-    if (!valid)
+    if (!valid){
+        console.log(UserInsertSchema.errors);
         return AjvResponseHandler.formatError(UserInsertSchema.errors, userSchemas.getInsertSchema());
+    }
     
     if(unique === false)
         return true;
@@ -69,11 +56,10 @@ async function modifyValidation(data, unique = true){
     data._id = ObjectId(data._id);
     var docs = await db.get().collection('users').findOne({_id:  { $ne: data._id}, username:data.username});
     if(docs){
-        return ([{'message':'Username is already existss'}])
+        return ([{'message':'Username is already existss'}]);
     }
     return true;
 }
-
 
  exports.validate = validate;
  exports.insertValidation = insertValidation;

@@ -1,0 +1,139 @@
+{
+    "_id": {
+        "$id": "#/properties/_id",
+        "type": "string",
+        "pattern": "^[0-9a-fA-F]{24}$"
+    },
+    "username": {
+        "$id": "#/properties/username",
+        "type": "string",
+        "minLength": 5,
+        "maxLength": 15,
+        "pattern": "^[a-z0-9_-]*$",
+        "text":"UserName"
+    },
+    "password": {
+        "$id": "#/properties/password",
+        "type": "string",
+        "minLength": 5,
+        "maxLength": 15,
+        "pattern": "^[a-z0-9_-]*$"
+    },
+    "email": {
+        "$id": "#/properties/email",
+        "type": "string",
+        "format": "email"
+    },
+    "dob": {
+        "$id": "#/properties/dob",
+        "format": "date",
+        "formatMaximum": "2016-02-06"
+    },
+    "phone": {
+        "$id": "#/properties/phone",
+        "type": "string",
+        "if": { "not": {"enum":[""]}},
+        "then": { "pattern": "^[0-9]{10}$"}
+    },
+    "gender": {
+        "$id": "#/properties/gender",
+        "enum": ["female", "male"]
+    },
+    "age": {
+        "$id": "#/properties/age",
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 1000,
+        "if": { "minimum": 100 },
+        "then": { "multipleOf": 100 },
+        "else": {
+            "if": { "minimum": 10 },
+            "then": { "multipleOf": 10 }
+        }
+    },
+    "favourite": {
+        "$id": "#/properties/favourite",
+        "type": "array",
+        "items": [
+            {
+                "type": "string",
+                "pattern": "^[0-9a-fA-F]{24}$"
+            }
+        ]
+    },
+    "faq": {
+        "$id": "#/properties/faq",
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "text":"Title",
+                    "if": { "not": {"enum":[""]}},
+                    "then": {"minLength": 5}
+                },
+                "description": { 
+                    "type": "string", 
+                    "text": "Description"
+                }
+            }
+        },
+        "text": "Question"
+    },
+    "contact": {
+        "$id": "#/properties/contact",
+        "type": "object",
+        "properties": {
+            "phone": {
+                "$id": "#/properties/phone",
+                "type": "string",
+                "if": { "not": {"enum":[""]}},
+                "then": {
+                    "oneOf": [
+                        { "pattern": "^[0-9]{10}$"},
+                        { "pattern": "^[0-9]{12}$"}
+                    ]
+                },
+                "text": "Contact No"
+            },
+            "email": {
+                "$id": "#/properties/email",
+                "type": "string",
+                "format": "email",
+                "minLength": 3,
+                "maxLength": 45,
+                "text": "email ID"
+            }
+        },
+        "anyOf": [ 
+            {
+                "required":["phone"]
+            },
+            {
+                "required":["email"]
+            }
+        ]
+    },
+    "createdon": {
+        "$id": "#/properties/createdon",
+        "type": "string",
+        "format": "date-time"
+    },
+    "favourite_numbers":{
+        "$id": "#/properties/favourite_numbers",
+        "type": "array",
+        "items": [
+            {
+                "type": "integer" 
+            }
+        ],
+        "text":"Favourite Numbers"
+    },
+    "deleted":{
+        "$id": "#/properties/deleted",
+        "type": "string",
+        "default": "0"
+    },
+    "additionalProperties":false
+}
